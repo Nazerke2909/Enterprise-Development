@@ -27,20 +27,29 @@ class AssignmentPolicyTest {
             assertEquals(to, result);
         } else {
             assertThrows(
-                    IllegalArgumentException.class,
+                    IllegalStateException.class,
                     () -> policy.move(id, from, to)
             );
         }
     }
+
     @Test
     void shouldThrowExceptionWhenAssignmentIdIsNull() {
         assertThrows(
-                IllegalArgumentException.class,
+                IllegalStateException.class,
                 () -> policy.move(
                         null,
                         AssignmentStatus.ASSIGNED,
                         AssignmentStatus.SUBMITTED
                 )
+        );
+    }
+
+    @Test
+    void shouldThrowExceptionWhenAssignmentIdIsBlank() {
+        assertThrows(
+                IllegalStateException.class,
+                () -> new AssignmentId("")
         );
     }
 }
