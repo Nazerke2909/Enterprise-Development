@@ -8,10 +8,10 @@ public class AssignmentPolicy {
             AssignmentStatus to
     ) {
         if (id == null) {
-            throw new IllegalArgumentException("Assignment id cannot be null");
+            throw new IllegalStateException("Assignment id cannot be null");
         }
         if (from == null || to == null) {
-            throw new IllegalArgumentException("Assignment status cannot be null");
+            throw new IllegalStateException("Assignment status cannot be null");
         }
         if (from == AssignmentStatus.ASSIGNED
                 && to == AssignmentStatus.SUBMITTED) {
@@ -21,7 +21,7 @@ public class AssignmentPolicy {
                 && to == AssignmentStatus.CHECKED) {
             return to;
         }
-        throw new IllegalArgumentException(
+        throw new IllegalStateException(
                 "Forbidden transition: " + from + " -> " + to
         );
     }
