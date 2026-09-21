@@ -1,4 +1,4 @@
-package com.example.homework;
+package com.example.homework.domain;
 
 public record AssignmentId(String value) {
     public AssignmentId {

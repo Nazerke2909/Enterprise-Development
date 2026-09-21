@@ -1,9 +1,14 @@
 package com.example.homework;
 
+import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertThrows;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.params.ParameterizedTest;
 import org.junit.jupiter.params.provider.CsvSource;
-import static org.junit.jupiter.api.Assertions.*;
+
+import com.example.homework.domain.AssignmentId;
+import com.example.homework.domain.AssignmentPolicy;
+import com.example.homework.domain.AssignmentStatus;
 
 class AssignmentPolicyTest {
 
