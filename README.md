@@ -31,3 +31,13 @@ homework process.
 
 This transition is also not allowed because an approved assignment is already
 finished. Once it is approved, it cannot be submitted again.
+
+# Rules
+
+The transition logic lives in small `Rule` implementations (plain Java, no Spring).
+`RuleChain` runs them in order and stops at the first failure.
+
+| Rule | Enforces | Status table rows |
+|------|----------|-------------------|
+| ApprovedIsFinalRule | Stop-factor: an approved assignment is finished | APPROVED → SUBMITTED (No) |
+| TransitionRule | Only the listed transitions are allowed | ASSIGNED → SUBMITTED, SUBMITTED → CHECKED, CHECKED → APPROVED (Yes); CHECKED → ASSIGNED (No) |

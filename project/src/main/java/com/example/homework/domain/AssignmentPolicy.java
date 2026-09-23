@@ -1,6 +1,17 @@
 package com.example.homework.domain;
 
+import java.util.List;
+
 public class AssignmentPolicy {
+    private final RuleChain rules;
+
+    public AssignmentPolicy() {
+        this(new RuleChain(List.of(new ApprovedIsFinalRule(), new TransitionRule())));
+    }
+
+    public AssignmentPolicy(RuleChain rules) {
+        this.rules = rules;
+    }
 
     public AssignmentStatus move(
             AssignmentId id,
@@ -13,16 +24,7 @@ public class AssignmentPolicy {
         if (from == null || to == null) {
             throw new IllegalStateException("Assignment status cannot be null");
         }
-        if (from == AssignmentStatus.ASSIGNED
-                && to == AssignmentStatus.SUBMITTED) {
-            return to;
-        }
-        if (from == AssignmentStatus.SUBMITTED
-                && to == AssignmentStatus.CHECKED) {
-            return to;
-        }
-        throw new IllegalStateException(
-                "Forbidden transition: " + from + " -> " + to
-        );
+        rules.check(from, to);
+        return to;
     }
 }
