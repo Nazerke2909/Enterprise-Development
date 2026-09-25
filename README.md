@@ -41,3 +41,39 @@ The transition logic lives in small `Rule` implementations (plain Java, no Sprin
 |------|----------|-------------------|
 | ApprovedIsFinalRule | Stop-factor: an approved assignment is finished | APPROVED → SUBMITTED (No) |
 | TransitionRule | Only the listed transitions are allowed | ASSIGNED → SUBMITTED, SUBMITTED → CHECKED, CHECKED → APPROVED (Yes); CHECKED → ASSIGNED (No) |
+
+#Architecture
+```mermaid
+flowchart TD
+    dto["<b>dto</b><br/>(JSON later)"]
+    client["<b>client</b><br/>(HTTP later)"]
+    handler["<b>handler</b><br/>(HTTP week 9)"]
+
+    subgraph config["config"]
+        direction TB
+        app["Application"]
+        service["AssignmentService<br/>(@Service)"]
+    end
+
+    subgraph domain["domain (no Spring)"]
+        direction TB
+        id["AssignmentId"]
+        status["AssignmentStatus"]
+        policy["AssignmentPolicy"]
+        chain["RuleChain"]
+        rule["Rule"]
+        transition["TransitionRule"]
+        approved["ApprovedIsFinalRule"]
+
+        chain -->|runs| rule
+        transition -.->|implements| rule
+        approved -.->|implements| rule
+    end
+
+    dto --> domain
+    client --> domain
+    handler --> domain
+    app --> service
+    service -->|injects| rule
+```
+Arrows point inward, and `domain` never imports `org.springframework`.
