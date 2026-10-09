@@ -77,19 +77,3 @@ flowchart TD
     service -->|injects| rule
 ```
 Arrows point inward, and `domain` never imports `org.springframework`.
-
-# Database (Lab 3)
-
-PostgreSQL only. Classroom URL: `jdbc:postgresql://localhost:5233/css`, user `css`, password `css`.
-The table is written by hand in `project/src/main/resources/db/schema.sql`. Nothing generates it.
-
-| Column | Meaning |
-|--------|---------|
-| `id` | surrogate key, `AssignmentId.newId()` |
-| `business_key` | human number such as `HW-1042`, `UNIQUE NOT NULL` |
-| `status` | text, `CHECK` in `ASSIGNED, SUBMITTED, CHECKED, APPROVED` |
-| `title` | text, `NOT NULL` |
-
-Packages: `domain` (no JDBC, no Spring), `persistence` (`AssignmentJdbc`, `JdbcTemplate` with `?`),
-`config` (`AssignmentService` with `@Transactional`).
-A duplicate `business_key` becomes `DuplicateAssignment` (unchecked, in `domain`).
