@@ -1,4 +1,5 @@
 package com.example.homework.config;
+import com.example.homework.domain.AssignmentId;
 import com.example.homework.domain.AssignmentStatus;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -15,9 +16,10 @@ public class DemoRunner implements CommandLineRunner {
 
     @Override
     public void run(String... args) {
-        log.info("ASSIGNED -> {}", service.move(AssignmentStatus.ASSIGNED, AssignmentStatus.SUBMITTED));
+        AssignmentId id = AssignmentId.newId();
+        log.info("ASSIGNED -> {}", service.move(id, AssignmentStatus.ASSIGNED, AssignmentStatus.SUBMITTED));
         try {
-            service.move(AssignmentStatus.APPROVED, AssignmentStatus.SUBMITTED);
+            service.move(id, AssignmentStatus.APPROVED, AssignmentStatus.SUBMITTED);
         } catch (IllegalStateException e) {
             log.info("Rejected: {}", e.getMessage());
         }

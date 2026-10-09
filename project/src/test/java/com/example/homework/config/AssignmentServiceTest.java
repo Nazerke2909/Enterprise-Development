@@ -1,9 +1,13 @@
 package com.example.homework.config;
+
+import com.example.homework.domain.AssignmentId;
 import com.example.homework.domain.AssignmentStatus;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.context.SpringBootTest;
-import static org.junit.jupiter.api.Assertions.*;
+
+import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertThrows;
 
 @SpringBootTest
 class AssignmentServiceTest {
@@ -13,12 +17,12 @@ class AssignmentServiceTest {
     @Test
     void allowedMove() {
         assertEquals(AssignmentStatus.SUBMITTED,
-                service.move(AssignmentStatus.ASSIGNED, AssignmentStatus.SUBMITTED));
+                service.move(AssignmentId.newId(), AssignmentStatus.ASSIGNED, AssignmentStatus.SUBMITTED));
     }
 
     @Test
     void forbiddenMove() {
         assertThrows(IllegalStateException.class,
-                () -> service.move(AssignmentStatus.APPROVED, AssignmentStatus.SUBMITTED));
+                () -> service.move(AssignmentId.newId(), AssignmentStatus.APPROVED, AssignmentStatus.SUBMITTED));
     }
 }
