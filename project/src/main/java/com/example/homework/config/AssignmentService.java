@@ -11,6 +11,7 @@ import org.springframework.dao.DataIntegrityViolationException;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
+import java.util.List;
 import java.util.UUID;
 
 @Service
@@ -34,6 +35,23 @@ public class AssignmentService {
         rules.check(from, to);
         notifier.statusChanged(id, to);
         return to;
+    }
+
+    @Transactional
+    public AssignmentStatus move(String businessKey, AssignmentStatus to) {
+        AssignmentJdbc.AssignmentRecord assignment = assignments.find(businessKey);
+        rules.check(assignment.status(), to);
+        assignments.updateStatus(assignment.id(), to);
+        notifier.statusChanged(new AssignmentId(assignment.id().toString()), to);
+        return to;
+    }
+
+    public AssignmentJdbc.AssignmentRecord find(String businessKey) {
+        return assignments.find(businessKey);
+    }
+
+    public List<AssignmentJdbc.AssignmentRecord> findAll() {
+        return assignments.findAll();
     }
 
     @Transactional

@@ -30,15 +30,42 @@ public class AssignmentJdbc {
         return n == null ? 0 : n;
     }
 
-    public AssignmentStatus findStatus(String businessKey) {
-        List<String> rows = jdbc.queryForList(
-                "SELECT status FROM assignment WHERE business_key = ?",
-                String.class,
-                businessKey);
+    public AssignmentRecord find(String businessKey) {
+        List<AssignmentRecord> rows = jdbc.query("""
+                SELECT id, business_key, status, title
+                FROM assignment
+                WHERE business_key = ?
+                """, (rs, rowNum) -> new AssignmentRecord(
+                rs.getObject("id", UUID.class),
+                rs.getString("business_key"),
+                toStatus(rs.getString("status")),
+                rs.getString("title")), businessKey);
         if (rows.isEmpty()) {
             throw new IllegalStateException("No assignment with key " + businessKey);
         }
-        return toStatus(rows.get(0));
+        return rows.get(0);
+    }
+
+    public List<AssignmentRecord> findAll() {
+        return jdbc.query("""
+                SELECT id, business_key, status, title
+                FROM assignment
+                ORDER BY created_at, business_key
+                """, (rs, rowNum) -> new AssignmentRecord(
+                rs.getObject("id", UUID.class),
+                rs.getString("business_key"),
+                toStatus(rs.getString("status")),
+                rs.getString("title")));
+    }
+
+    public void updateStatus(UUID id, AssignmentStatus status) {
+        jdbc.update(
+                "UPDATE assignment SET status = ? WHERE id = ?",
+                status.name(), id);
+    }
+
+    public AssignmentStatus findStatus(String businessKey) {
+        return find(businessKey).status();
     }
 
     static AssignmentStatus toStatus(String text) {
@@ -47,5 +74,12 @@ public class AssignmentJdbc {
         } catch (IllegalArgumentException | NullPointerException ex) {
             throw new IllegalStateException("Unknown assignment status in database: " + text, ex);
         }
+    }
+
+    public record AssignmentRecord(
+            UUID id,
+            String businessKey,
+            AssignmentStatus status,
+            String title) {
     }
 }

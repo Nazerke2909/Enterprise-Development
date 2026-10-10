@@ -3,3 +3,7 @@ spring:
     url: jdbc:postgresql://localhost:5432/css
     username: css
     password: css
+
+app:
+  cli:
+    enabled: false

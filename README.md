@@ -93,3 +93,24 @@ The table is written by hand in `project/src/main/resources/db/schema.sql`. Noth
 Packages: `domain` (no JDBC, no Spring), `persistence` (`AssignmentJdbc`, `JdbcTemplate` with `?`),
 `config` (`AssignmentService` with `@Transactional`).
 A duplicate `business_key` becomes `DuplicateAssignment` (unchecked, in `domain`).
+
+## Terminal menu
+
+After starting PostgreSQL and creating the table, run the application with its
+interactive English-language menu:
+
+```powershell
+cd ".\project"
+mvn spring-boot:run "-Dspring-boot.run.arguments=--app.cli.enabled=true"
+```
+
+The menu allows you to:
+
+1. create an assignment;
+2. show all assignments;
+3. find an assignment by key;
+4. change the status while checking transition rules;
+0. exit.
+
+Creating an assignment and changing its status are saved in the `assignment` table.
+The status values are `ASSIGNED`, `SUBMITTED`, `CHECKED`, and `APPROVED`.

@@ -4,9 +4,7 @@ import com.example.homework.domain.AssignmentStatus;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.boot.CommandLineRunner;
-import org.springframework.stereotype.Component;
 
-@Component
 public class DemoRunner implements CommandLineRunner {
     private static final Logger log = LoggerFactory.getLogger(DemoRunner.class);
     private final AssignmentService service;
