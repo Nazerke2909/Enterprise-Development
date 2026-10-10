@@ -14,6 +14,10 @@ import org.springframework.transaction.annotation.Transactional;
 import java.util.List;
 import java.util.UUID;
 
+import java.util.Collections;
+import java.util.LinkedHashMap;
+import java.util.Map;
+
 @Service
 public class AssignmentService {
     private static final String TITLE_MISSING = "Assignment title cannot be null or blank";
