@@ -15,7 +15,6 @@ public class AssignmentJdbc {
         this.jdbc = jdbc;
     }
 
-    /** A duplicate business_key surfaces as DataIntegrityViolationException (SQLState 23505). */
     public void insert(UUID id, String businessKey, AssignmentStatus status, String title) {
         jdbc.update("""
                 INSERT INTO assignment (id, business_key, status, title)
@@ -31,24 +30,56 @@ public class AssignmentJdbc {
         return n == null ? 0 : n;
     }
 
-    /** Reads the status text back and turns it into the enum. */
-    public AssignmentStatus findStatus(String businessKey) {
-        List<String> rows = jdbc.queryForList(
-                "SELECT status FROM assignment WHERE business_key = ?",
-                String.class,
-                businessKey);
+    public AssignmentRecord find(String businessKey) {
+        List<AssignmentRecord> rows = jdbc.query("""
+                SELECT id, business_key, status, title
+                FROM assignment
+                WHERE business_key = ?
+                """, (rs, rowNum) -> new AssignmentRecord(
+                rs.getObject("id", UUID.class),
+                rs.getString("business_key"),
+                toStatus(rs.getString("status")),
+                rs.getString("title")), businessKey);
         if (rows.isEmpty()) {
             throw new IllegalStateException("No assignment with key " + businessKey);
         }
-        return toStatus(rows.get(0));
+        return rows.get(0);
     }
 
-    /** An unknown text from the database throws. It never becomes a new status. */
+    public List<AssignmentRecord> findAll() {
+        return jdbc.query("""
+                SELECT id, business_key, status, title
+                FROM assignment
+                ORDER BY created_at, business_key
+                """, (rs, rowNum) -> new AssignmentRecord(
+                rs.getObject("id", UUID.class),
+                rs.getString("business_key"),
+                toStatus(rs.getString("status")),
+                rs.getString("title")));
+    }
+
+    public void updateStatus(UUID id, AssignmentStatus status) {
+        jdbc.update(
+                "UPDATE assignment SET status = ? WHERE id = ?",
+                status.name(), id);
+    }
+
+    public AssignmentStatus findStatus(String businessKey) {
+        return find(businessKey).status();
+    }
+
     static AssignmentStatus toStatus(String text) {
         try {
             return AssignmentStatus.valueOf(text);
         } catch (IllegalArgumentException | NullPointerException ex) {
             throw new IllegalStateException("Unknown assignment status in database: " + text, ex);
         }
+    }
+
+    public record AssignmentRecord(
+            UUID id,
+            String businessKey,
+            AssignmentStatus status,
+            String title) {
     }
 }

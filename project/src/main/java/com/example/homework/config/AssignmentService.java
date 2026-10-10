@@ -1,8 +1,18 @@
 package com.example.homework.config;
 
+import com.example.homework.domain.AssignmentId;
+import com.example.homework.domain.AssignmentKey;
+import com.example.homework.domain.AssignmentNotifier;
 import com.example.homework.domain.AssignmentStatus;
+import com.example.homework.domain.DuplicateAssignment;
 import com.example.homework.domain.Rule;
+import com.example.homework.persistence.AssignmentJdbc;
+import org.springframework.dao.DataIntegrityViolationException;
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
+
+import java.util.List;
+import java.util.UUID;
 
 import java.util.Collections;
 import java.util.LinkedHashMap;
@@ -10,75 +20,69 @@ import java.util.Map;
 
 @Service
 public class AssignmentService {
+    private static final String TITLE_MISSING = "Assignment title cannot be null or blank";
+
     private final Rule rules;
-    private final Map<String, Assignment> assignments = new LinkedHashMap<>();
+    private final AssignmentJdbc assignments;
+    private final AssignmentNotifier notifier;
 
-    public AssignmentService(Rule rules) {
+    public AssignmentService(Rule rules, AssignmentJdbc assignments, AssignmentNotifier notifier) {
         this.rules = rules;
+        this.assignments = assignments;
+        this.notifier = notifier;
     }
 
-    public synchronized void create(String id, String title) {
-        if (id == null || id.isBlank()) {
-            throw new IllegalStateException("Assignment ID cannot be blank.");
+    public AssignmentStatus move(AssignmentId id, AssignmentStatus from, AssignmentStatus to) {
+        if (id == null) {
+            throw new IllegalStateException("Assignment id cannot be null");
         }
-        if (title == null || title.isBlank()) {
-            throw new IllegalStateException("Assignment title cannot be blank.");
-        }
-        String key = id.trim();
-        if (assignments.containsKey(key)) {
-            throw new IllegalStateException("Assignment already exists: " + key);
-        }
-        assignments.put(key, new Assignment(title.trim(), AssignmentStatus.ASSIGNED));
-    }
-
-    public synchronized Map<String, AssignmentStatus> list() {
-        Map<String, AssignmentStatus> result = new LinkedHashMap<>();
-        assignments.forEach((id, assignment) -> result.put(id, assignment.status()));
-        return Collections.unmodifiableMap(result);
-    }
-
-    public synchronized String titleOf(String id) {
-        return requireAssignment(id).title();
-    }
-
-    public synchronized AssignmentStatus statusOf(String id) {
-        return requireAssignment(id).status();
-    }
-
-    public synchronized AssignmentStatus submit(String id) {
-        return advance(id, AssignmentStatus.SUBMITTED);
-    }
-
-    public synchronized AssignmentStatus check(String id) {
-        return advance(id, AssignmentStatus.CHECKED);
-    }
-
-    public synchronized AssignmentStatus approve(String id) {
-        return advance(id, AssignmentStatus.APPROVED);
-    }
-
-    public AssignmentStatus move(AssignmentStatus from, AssignmentStatus to) {
         rules.check(from, to);
+        notifier.statusChanged(id, to);
         return to;
     }
 
-    private AssignmentStatus advance(String id, AssignmentStatus target) {
-        Assignment current = requireAssignment(id);
-        rules.check(current.status(), target);
-        assignments.put(id.trim(), new Assignment(current.title(), target));
-        return target;
+    @Transactional
+    public AssignmentStatus move(String businessKey, AssignmentStatus to) {
+        AssignmentJdbc.AssignmentRecord assignment = assignments.find(businessKey);
+        rules.check(assignment.status(), to);
+        assignments.updateStatus(assignment.id(), to);
+        notifier.statusChanged(new AssignmentId(assignment.id().toString()), to);
+        return to;
     }
 
-    private Assignment requireAssignment(String id) {
-        if (id == null || id.isBlank()) {
-            throw new IllegalStateException("Assignment ID cannot be blank.");
-        }
-        Assignment assignment = assignments.get(id.trim());
-        if (assignment == null) {
-            throw new IllegalStateException("Assignment not found: " + id.trim());
-        }
-        return assignment;
+    public AssignmentJdbc.AssignmentRecord find(String businessKey) {
+        return assignments.find(businessKey);
     }
 
-    private record Assignment(String title, AssignmentStatus status) { }
+    public List<AssignmentJdbc.AssignmentRecord> findAll() {
+        return assignments.findAll();
+    }
+
+    @Transactional
+    public void register(AssignmentId id, String businessKey, String title) {
+        AssignmentKey key = new AssignmentKey(businessKey);
+        requireTitle(title);
+        try {
+            assignments.insert(id.uuid(), key.value(), AssignmentStatus.ASSIGNED, title);
+        } catch (DataIntegrityViolationException ex) {
+            throw new DuplicateAssignment(key.value());
+        }
+    }
+
+    @Transactional
+    public void insertTwice(String businessKey) {
+        AssignmentKey key = new AssignmentKey(businessKey);
+        assignments.insert(UUID.randomUUID(), key.value(), AssignmentStatus.ASSIGNED, "Essay");
+        try {
+            assignments.insert(UUID.randomUUID(), key.value(), AssignmentStatus.ASSIGNED, "Essay again");
+        } catch (DataIntegrityViolationException ex) {
+            throw new DuplicateAssignment(key.value());
+        }
+    }
+
+    private static void requireTitle(String title) {
+        if (title == null || title.isBlank()) {
+            throw new IllegalStateException(TITLE_MISSING);
+        }
+    }
 }

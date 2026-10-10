@@ -1,5 +1,9 @@
 spring:
   datasource:
-    url: jdbc:postgresql://localhost:5233/css
+    url: jdbc:postgresql://localhost:5432/css
     username: css
     password: css
+
+app:
+  cli:
+    enabled: false
