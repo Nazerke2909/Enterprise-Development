@@ -6,7 +6,7 @@ import com.example.homework.domain.AssignmentNotifier;
 import com.example.homework.domain.AssignmentStatus;
 import com.example.homework.domain.RuleChain;
 import com.example.homework.domain.TransitionRule;
-import com.example.homework.persistence.AssignmentJdbc;
+import com.example.homework.persistence.AssignmentRepository;
 import org.junit.jupiter.api.Test;
 
 import java.util.List;
@@ -21,7 +21,7 @@ class AssignmentServiceMockedPortTest {
     private final AssignmentNotifier notifier = mock(AssignmentNotifier.class);
     private final AssignmentService service = new AssignmentService(
             new RuleChain(List.of(new ApprovedIsFinalRule(), new TransitionRule())),
-            mock(AssignmentJdbc.class),
+            mock(AssignmentRepository.class),
             notifier);
     private final AssignmentId id = new AssignmentId("HW-1");
 
