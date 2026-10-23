@@ -1,7 +1,12 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <project version="4">
+  <component name="AutoImportSettings">
+    <option name="autoReloadType" value="SELECTIVE" />
+  </component>
   <component name="ChangeListManager">
-    <list default="true" id="c98020e1-dc0f-4187-973e-bdb149808749" name="Changes" comment="" />
+    <list default="true" id="c98020e1-dc0f-4187-973e-bdb149808749" name="Changes" comment="">
+      <change beforePath="$PROJECT_DIR$/project/src/main/java/com/example/homework/persistence/AssignmentJdbc.java" beforeDir="false" afterPath="$PROJECT_DIR$/project/src/main/java/com/example/homework/persistence/AssignmentJdbc.java" afterDir="false" />
+    </list>
     <option name="SHOW_DIALOG" value="false" />
     <option name="HIGHLIGHT_CONFLICTS" value="true" />
     <option name="HIGHLIGHT_NON_ACTIVE_CHANGELIST" value="false" />
@@ -10,9 +15,9 @@
   <component name="Git.Settings">
     <option name="RECENT_GIT_ROOT_PATH" value="$PROJECT_DIR$" />
   </component>
-  <component name="ProjectColorInfo"><![CDATA[{
-  "associatedIndex": 8
-}]]></component>
+  <component name="ProjectColorInfo">{
+  &quot;associatedIndex&quot;: 8
+}</component>
   <component name="ProjectId" id="3JDznks3urZK5Nw5iqHAeMV6g3L" />
   <component name="ProjectViewState">
     <option name="hideEmptyMiddlePackages" value="true" />
@@ -22,11 +27,12 @@
   "keyToString": {
     "ModuleVcsDetector.initialDetectionPerformed": "true",
     "RunOnceActivity.ShowReadmeOnStart": "true",
+    "RunOnceActivity.TerminalTabsStorage.copyFrom.TerminalArrangementManager.252": "true",
     "RunOnceActivity.git.unshallow": "true",
-    "git-widget-placeholder": "main",
+    "git-widget-placeholder": "lab3",
     "ignore.virus.scanning.warn.message": "true",
     "kotlin-language-version-configured": "true",
-    "last_opened_file_path": "C:/Users/Admin/OneDrive/Desktop/narxoz/корп разраб/лаб 1/Enterprise-Development"
+    "last_opened_file_path": "C:/Users/Admin/OneDrive/Desktop/narxoz/корп разраб/Enterprise-Development/Enterprise-Development"
   }
 }]]></component>
   <component name="SharedIndexes">
@@ -45,5 +51,16 @@
       <updated>1789210598699</updated>
     </task>
     <servers />
+  </component>
+  <component name="Vcs.Log.Tabs.Properties">
+    <option name="TAB_STATES">
+      <map>
+        <entry key="MAIN">
+          <value>
+            <State />
+          </value>
+        </entry>
+      </map>
+    </option>
   </component>
 </project>
