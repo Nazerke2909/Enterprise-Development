@@ -4,6 +4,9 @@ import com.example.homework.domain.AssignmentStatus;
 import jakarta.persistence.AttributeConverter;
 import jakarta.persistence.Converter;
 
+/**
+ * Stores {@link AssignmentStatus} as plain text and fails loudly on unknown database values.
+ */
 @Converter
 public class AssignmentStatusConverter implements AttributeConverter<AssignmentStatus, String> {
 
