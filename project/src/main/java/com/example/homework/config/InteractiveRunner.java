@@ -2,7 +2,7 @@ package com.example.homework.config;
 
 import com.example.homework.domain.AssignmentId;
 import com.example.homework.domain.AssignmentStatus;
-import com.example.homework.persistence.AssignmentJdbc;
+import com.example.homework.persistence.AssignmentRecord;
 import org.springframework.boot.CommandLineRunner;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnProperty;
 import org.springframework.stereotype.Component;
@@ -74,7 +74,7 @@ public class InteractiveRunner implements CommandLineRunner {
     }
 
     private void printAll() {
-        List<AssignmentJdbc.AssignmentRecord> assignments = service.findAll();
+        List<AssignmentRecord> assignments = service.findAll();
         if (assignments.isEmpty()) {
             System.out.println("No assignments yet.");
             return;
@@ -89,7 +89,7 @@ public class InteractiveRunner implements CommandLineRunner {
 
     private void find(Scanner scanner) {
         System.out.print("Enter assignment key: ");
-        AssignmentJdbc.AssignmentRecord assignment = service.find(scanner.nextLine().trim());
+        AssignmentRecord assignment = service.find(scanner.nextLine().trim());
         System.out.printf("Key: %s, status: %s, title: %s, id: %s%n",
                 assignment.businessKey(), assignment.status(), assignment.title(), assignment.id());
     }

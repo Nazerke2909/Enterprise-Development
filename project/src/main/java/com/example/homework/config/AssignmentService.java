@@ -6,7 +6,9 @@ import com.example.homework.domain.AssignmentNotifier;
 import com.example.homework.domain.AssignmentStatus;
 import com.example.homework.domain.DuplicateAssignment;
 import com.example.homework.domain.Rule;
-import com.example.homework.persistence.AssignmentJdbc;
+import com.example.homework.persistence.AssignmentEntity;
+import com.example.homework.persistence.AssignmentRecord;
+import com.example.homework.persistence.AssignmentRepository;
 import org.springframework.dao.DataIntegrityViolationException;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
@@ -14,19 +16,15 @@ import org.springframework.transaction.annotation.Transactional;
 import java.util.List;
 import java.util.UUID;
 
-import java.util.Collections;
-import java.util.LinkedHashMap;
-import java.util.Map;
-
 @Service
 public class AssignmentService {
     private static final String TITLE_MISSING = "Assignment title cannot be null or blank";
 
     private final Rule rules;
-    private final AssignmentJdbc assignments;
+    private final AssignmentRepository assignments;
     private final AssignmentNotifier notifier;
 
-    public AssignmentService(Rule rules, AssignmentJdbc assignments, AssignmentNotifier notifier) {
+    public AssignmentService(Rule rules, AssignmentRepository assignments, AssignmentNotifier notifier) {
         this.rules = rules;
         this.assignments = assignments;
         this.notifier = notifier;
@@ -43,41 +41,52 @@ public class AssignmentService {
 
     @Transactional
     public AssignmentStatus move(String businessKey, AssignmentStatus to) {
-        AssignmentJdbc.AssignmentRecord assignment = assignments.find(businessKey);
-        rules.check(assignment.status(), to);
-        assignments.updateStatus(assignment.id(), to);
-        notifier.statusChanged(new AssignmentId(assignment.id().toString()), to);
+        AssignmentEntity assignment = load(businessKey);
+        rules.check(assignment.getStatus(), to);
+        assignment.changeStatus(to); // flushed on commit (dirty checking)
+        notifier.statusChanged(new AssignmentId(assignment.getId().toString()), to);
         return to;
     }
 
-    public AssignmentJdbc.AssignmentRecord find(String businessKey) {
-        return assignments.find(businessKey);
+    @Transactional(readOnly = true)
+    public AssignmentRecord find(String businessKey) {
+        return AssignmentRecord.from(load(businessKey));
     }
 
-    public List<AssignmentJdbc.AssignmentRecord> findAll() {
-        return assignments.findAll();
+    @Transactional(readOnly = true)
+    public List<AssignmentRecord> findAll() {
+        return assignments.findAllByOrderByCreatedAtAscBusinessKeyAsc().stream()
+                .map(AssignmentRecord::from)
+                .toList();
     }
 
     @Transactional
     public void register(AssignmentId id, String businessKey, String title) {
         AssignmentKey key = new AssignmentKey(businessKey);
         requireTitle(title);
-        try {
-            assignments.insert(id.uuid(), key.value(), AssignmentStatus.ASSIGNED, title);
-        } catch (DataIntegrityViolationException ex) {
-            throw new DuplicateAssignment(key.value());
-        }
+        insert(id.uuid(), key, title);
     }
 
     @Transactional
     public void insertTwice(String businessKey) {
         AssignmentKey key = new AssignmentKey(businessKey);
-        assignments.insert(UUID.randomUUID(), key.value(), AssignmentStatus.ASSIGNED, "Essay");
+        assignments.saveAndFlush(
+                new AssignmentEntity(UUID.randomUUID(), key.value(), AssignmentStatus.ASSIGNED, "Essay"));
+        insert(UUID.randomUUID(), key, "Essay again");
+    }
+
+    private void insert(UUID id, AssignmentKey key, String title) {
         try {
-            assignments.insert(UUID.randomUUID(), key.value(), AssignmentStatus.ASSIGNED, "Essay again");
+            // flush now so a duplicate business_key surfaces here, not later at commit
+            assignments.saveAndFlush(new AssignmentEntity(id, key.value(), AssignmentStatus.ASSIGNED, title));
         } catch (DataIntegrityViolationException ex) {
             throw new DuplicateAssignment(key.value());
         }
+    }
+
+    private AssignmentEntity load(String businessKey) {
+        return assignments.findByBusinessKey(businessKey)
+                .orElseThrow(() -> new IllegalStateException("No assignment with key " + businessKey));
     }
 
     private static void requireTitle(String title) {
