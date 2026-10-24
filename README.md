@@ -78,10 +78,17 @@ flowchart TD
 ```
 Arrows point inward, and `domain` never imports `org.springframework`.
 
-# Database (Lab 3)
+# Database (JPA + Flyway)
 
 PostgreSQL only. Classroom URL: `jdbc:postgresql://localhost:5233/css`, user `css`, password `css`.
-The table is written by hand in `project/src/main/resources/db/schema.sql`. Nothing generates it.
+The schema is owned by Flyway: migrations live in
+`project/src/main/resources/db/migration` (`V1__create_assignment.sql`) and
+run on application start.
+Hibernate only validates the schema (`spring.jpa.hibernate.ddl
+auto=validate`), it never changes it. To change the table, add a new
+`V2__...sql`, never edit an applied migration.
+A database created earlier from the old `schema.sql` is baselined at version 1
+automatically (`baseline-on-migrate`).
 
 | Column | Meaning |
 |--------|---------|
@@ -90,13 +97,16 @@ The table is written by hand in `project/src/main/resources/db/schema.sql`. Noth
 | `status` | text, `CHECK` in `ASSIGNED, SUBMITTED, CHECKED, APPROVED` |
 | `title` | text, `NOT NULL` |
 
-Packages: `domain` (no JDBC, no Spring), `persistence` (`AssignmentJdbc`, `JdbcTemplate` with `?`),
+Packages: `domain` (no JPA, no Spring), `persistence`
+(`AssignmentEntity`, `AssignmentRepository` as Spring Data JPA,
+`AssignmentStatusConverter`, `AssignmentRecord` read model),
 `config` (`AssignmentService` with `@Transactional`).
 A duplicate `business_key` becomes `DuplicateAssignment` (unchecked, in `domain`).
 
 ## Terminal menu
 
-After starting PostgreSQL and creating the table, run the application with its
+After starting PostgreSQL (the table is created by Flyway), run the
+application with its
 interactive English-language menu:
 
 ```powershell
