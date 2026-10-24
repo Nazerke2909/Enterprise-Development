@@ -4,6 +4,8 @@ This project is a simple web-based system for managing homework assignments.
 It allows teachers and students to follow the progress of an assignment from
 the moment it is assigned until it is finally approved.
 
+Requirements: Java 17 or newer, Maven, and PostgreSQL.
+
 # Core item
 
 The main entity of this project is an **Assignment**.
@@ -80,7 +82,8 @@ Arrows point inward, and `domain` never imports `org.springframework`.
 
 # Database (Lab 3)
 
-PostgreSQL only. Classroom URL: `jdbc:postgresql://localhost:5233/css`, user `css`, password `css`.
+PostgreSQL only. Default URL: `jdbc:postgresql://localhost:5432/css`, user `css`, password `css`.
+If PostgreSQL uses another port, set `DB_PORT` before starting (for example, `DB_PORT=5233`).
 The table is written by hand in `project/src/main/resources/db/schema.sql`. Nothing generates it.
 
 | Column | Meaning |
