@@ -43,7 +43,7 @@ public class AssignmentService {
     public AssignmentStatus move(String businessKey, AssignmentStatus to) {
         AssignmentEntity assignment = load(businessKey);
         rules.check(assignment.getStatus(), to);
-        assignment.changeStatus(to); // flushed on commit (dirty checking)
+        assignment.changeStatus(to);
         notifier.statusChanged(new AssignmentId(assignment.getId().toString()), to);
         return to;
     }
@@ -77,7 +77,6 @@ public class AssignmentService {
 
     private void insert(UUID id, AssignmentKey key, String title) {
         try {
-            // flush now so a duplicate business_key surfaces here, not later at commit
             assignments.saveAndFlush(new AssignmentEntity(id, key.value(), AssignmentStatus.ASSIGNED, title));
         } catch (DataIntegrityViolationException ex) {
             throw new DuplicateAssignment(key.value());

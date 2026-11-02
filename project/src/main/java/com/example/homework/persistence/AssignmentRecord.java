@@ -4,7 +4,6 @@ import com.example.homework.domain.AssignmentStatus;
 
 import java.util.UUID;
 
-/** Immutable read model returned to callers so JPA entities do not leak out of the service. */
 public record AssignmentRecord(
         UUID id,
         String businessKey,
