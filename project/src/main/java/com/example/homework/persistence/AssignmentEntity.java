@@ -27,12 +27,10 @@ public class AssignmentEntity {
     @Column(nullable = false, columnDefinition = "text")
     private String title;
 
-    /** Filled by the database default ({@code now()}), never written by JPA. */
     @Column(name = "created_at", insertable = false, updatable = false)
     private Instant createdAt;
 
     protected AssignmentEntity() {
-        // required by JPA
     }
 
     public AssignmentEntity(UUID id, String businessKey, AssignmentStatus status, String title) {

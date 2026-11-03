@@ -3,6 +3,7 @@ package com.example.homework.config;
 import com.example.homework.domain.AssignmentId;
 import com.example.homework.domain.AssignmentKey;
 import com.example.homework.domain.AssignmentNotifier;
+import com.example.homework.domain.AssignmentNotFound;
 import com.example.homework.domain.AssignmentStatus;
 import com.example.homework.domain.DuplicateAssignment;
 import com.example.homework.domain.Rule;
@@ -43,7 +44,7 @@ public class AssignmentService {
     public AssignmentStatus move(String businessKey, AssignmentStatus to) {
         AssignmentEntity assignment = load(businessKey);
         rules.check(assignment.getStatus(), to);
-        assignment.changeStatus(to); // flushed on commit (dirty checking)
+        assignment.changeStatus(to);
         notifier.statusChanged(new AssignmentId(assignment.getId().toString()), to);
         return to;
     }
@@ -60,11 +61,18 @@ public class AssignmentService {
                 .toList();
     }
 
+    @Transactional(readOnly = true)
+    public AssignmentRecord findById(UUID id) {
+        return assignments.findById(id)
+                .map(AssignmentRecord::from)
+                .orElseThrow(() -> new AssignmentNotFound(id.toString()));
+    }
+
     @Transactional
-    public void register(AssignmentId id, String businessKey, String title) {
+    public AssignmentRecord register(AssignmentId id, String businessKey, String title) {
         AssignmentKey key = new AssignmentKey(businessKey);
         requireTitle(title);
-        insert(id.uuid(), key, title);
+        return insert(id.uuid(), key, title);
     }
 
     @Transactional
@@ -75,13 +83,14 @@ public class AssignmentService {
         insert(UUID.randomUUID(), key, "Essay again");
     }
 
-    private void insert(UUID id, AssignmentKey key, String title) {
+    private AssignmentRecord insert(UUID id, AssignmentKey key, String title) {
+        AssignmentEntity entity = new AssignmentEntity(id, key.value(), AssignmentStatus.ASSIGNED, title);
         try {
-            // flush now so a duplicate business_key surfaces here, not later at commit
-            assignments.saveAndFlush(new AssignmentEntity(id, key.value(), AssignmentStatus.ASSIGNED, title));
+            assignments.saveAndFlush(entity);
         } catch (DataIntegrityViolationException ex) {
             throw new DuplicateAssignment(key.value());
         }
+        return AssignmentRecord.from(entity);
     }
 
     private AssignmentEntity load(String businessKey) {
