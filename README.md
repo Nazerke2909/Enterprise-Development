@@ -135,3 +135,16 @@ The menu allows you to:
 
 Creating an assignment and changing its status are saved in the `assignment` table.
 The status values are `ASSIGNED`, `SUBMITTED`, `CHECKED`, and `APPROVED`.
+
+### Login and roles
+
+Start the menu with `mvn spring-boot:run "-Dspring-boot.run.arguments=--app.cli.enabled=true"`.
+
+| Role | Create assignment | Show / find | Change status |
+|------|-------------------|-------------|---------------|
+| STUDENT | no | yes | only to SUBMITTED |
+| TEACHER | yes | yes | only to CHECKED or APPROVED |
+
+Registration in the menu creates a `STUDENT` only. Dev demo users are
+`teacher / teacher123` and `student / student123`; production has no demo
+users. Passwords are stored as PBKDF2-HMAC-SHA256 hashes with random salts.
