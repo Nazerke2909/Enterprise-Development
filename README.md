@@ -103,6 +103,17 @@ Packages: `domain` (no JPA, no Spring), `persistence`
 `config` (`AssignmentService` with `@Transactional`).
 A duplicate `business_key` becomes `DuplicateAssignment` (unchecked, in `domain`).
 
+# Run
+
+| Profile | How | Database |
+|---|---|---|
+| dev (default) | `mvn spring-boot:run` | `localhost, db/user/password 'css'` |
+| prod | `SPRING_PROFILES_ACTIVE=prod` + `CSS_DB_URL`, `CSS_DB_USER`, `CSS_DB_PASSWORD`, `CSS_DNSHOWDOWN` | from env |
+
+API: `POST /api/v1/assignments`, `GET /api/v1/assignments/{id}`.
+
+Swagger UI: `/swagger-ui.html`. Spec: `/v3/api-docs`. Health: `/actuator/health`.
+
 ## Terminal menu
 
 After starting PostgreSQL (the table is created by Flyway), run the
