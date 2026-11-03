@@ -80,7 +80,8 @@ Arrows point inward, and `domain` never imports `org.springframework`.
 
 # Database (JPA + Flyway)
 
-PostgreSQL only. Classroom URL: `jdbc:postgresql://localhost:5233/css`, user `css`, password `css`.
+PostgreSQL only. The development URL is
+`jdbc:postgresql://localhost:5432/css`, user `css`, password `css`.
 The schema is owned by Flyway: migrations live in
 `project/src/main/resources/db/migration` (`V1__create_assignment.sql`) and
 run on application start.
@@ -113,6 +114,78 @@ A duplicate `business_key` becomes `DuplicateAssignment` (unchecked, in `domain`
 API: `POST /api/v1/assignments`, `GET /api/v1/assignments/{id}`.
 
 Swagger UI: `/swagger-ui.html`. Spec: `/v3/api-docs`. Health: `/actuator/health`.
+
+## PostgreSQL setup on Windows
+
+These steps are for a teammate setting up the project for the first time.
+The password requested by `psql` is the password of the PostgreSQL role, not
+the Windows password and not the application login password.
+
+1. Install PostgreSQL and remember the password of the administrator role
+   (usually `postgres`). During installation, leave the port as `5432`.
+2. Open **Services** in Windows and start the PostgreSQL service. Its name
+   usually looks like `postgresql-x64-...`. It must be running before starting
+   the application.
+3. Open **SQL Shell (psql)** from the PostgreSQL start menu, or open
+   PowerShell if `psql` is in `PATH`. Connect as the administrator:
+
+   ```powershell
+   psql -U postgres -h localhost -p 5432 -W
+   ```
+
+   Enter the administrator password chosen during PostgreSQL installation.
+   Nothing is displayed while typing a password; this is normal.
+4. In the psql window, create the application role and database. These
+   commands are safe to run again:
+
+   ```sql
+   DO $$
+   BEGIN
+       IF NOT EXISTS (SELECT FROM pg_roles WHERE rolname = 'css') THEN
+           CREATE ROLE css LOGIN PASSWORD 'css';
+       ELSE
+           ALTER ROLE css WITH LOGIN PASSWORD 'css';
+       END IF;
+   END
+   $$;
+
+   SELECT 'CREATE DATABASE css OWNER css'
+   WHERE NOT EXISTS (SELECT FROM pg_database WHERE datname = 'css')\gexec
+   ```
+
+   Exit psql with `\q`.
+5. Verify the exact credentials used by the application:
+
+   ```powershell
+   psql -U css -d css -h localhost -p 5432 -W
+   ```
+
+   When prompted, enter `css`. If this succeeds, the database connection is
+   ready. Do not run `cd` commands inside the psql window.
+6. In a new PowerShell window, from the repository root, start the application:
+
+   ```powershell
+   cd ".\project"
+   mvn spring-boot:run "-Dspring-boot.run.arguments=--app.cli.enabled=true"
+   ```
+
+   Flyway creates the tables automatically. No manual `CREATE TABLE` command
+   is needed.
+
+### PostgreSQL connection errors
+
+- `psql is not recognized`: start **SQL Shell (psql)**, or add PostgreSQL's
+  `bin` directory (for example `C:\Program Files\PostgreSQL\16\bin`) to
+  `PATH`.
+- `connection refused`: the PostgreSQL service is stopped, or PostgreSQL is
+  listening on a different port. Check the service and use port `5432`.
+- `password authentication failed for user "css"`: the role exists with a
+  different password. Connect as `postgres` and run
+  `ALTER ROLE css WITH PASSWORD 'css';`, then retry the verification command.
+- `database "css" does not exist`: connect as `postgres` and run
+  `CREATE DATABASE css OWNER css;`.
+- `password authentication failed for user "postgres"`: use the administrator
+  password created during PostgreSQL installation, or reset it in pgAdmin.
 
 ## Terminal menu
 
