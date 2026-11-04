@@ -1,5 +1,6 @@
 package com.example.homework.client;
 
+import com.example.homework.config.Application;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.context.SpringBootTest;
@@ -9,7 +10,7 @@ import java.time.Duration;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
 
-@SpringBootTest
+@SpringBootTest(classes = Application.class)
 @ActiveProfiles("dev")
 class DownstreamPropertiesTest{
     @Autowired

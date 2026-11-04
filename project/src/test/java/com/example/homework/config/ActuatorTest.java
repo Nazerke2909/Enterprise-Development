@@ -23,7 +23,7 @@ class ActuatorTest {
     void healthIsUp() throws Exception {
         mvc.perform(get("/actuator/health"))
                 .andExpect(status().isOk())
-                .andExpect(jsonPath("$. status") .value("UP"))
+                .andExpect(jsonPath("$.status").value("UP"))
                 .andExpect(jsonPath("$.components").doesNotExist());
     }
 
@@ -36,7 +36,7 @@ class ActuatorTest {
     
     @Test 
     void dangeriusEndpointsAreNotExposed() throws Exception {
-        for (String name : new String[]{"env", "beans", "headmap", "shutdown"}) {
+        for (String name : new String[]{"env", "beans", "heapdump", "shutdown"}) {
             mvc.perform(get("/actuator/" + name)).andExpect(status().isNotFound());
         }
     }
