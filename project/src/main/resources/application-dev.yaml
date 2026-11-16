@@ -4,7 +4,10 @@ spring:
     username: css
     password: css
 app:
+  jwt:
+    secret: classroom-dev-secret-homework-control-2026-xyz
   auth:
+    # dev-only users; passwords are BCrypt-encoded in memory at startup
     seed:
       - username: teacher
         password: teacher123
