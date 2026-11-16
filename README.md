@@ -221,3 +221,38 @@ Start the menu with `mvn spring-boot:run "-Dspring-boot.run.arguments=--app.cli.
 Registration in the menu creates a `STUDENT` only. Dev demo users are
 `teacher / teacher123` and `student / student123`; production has no demo
 users. Passwords are stored as PBKDF2-HMAC-SHA256 hashes with random salts.
+
+# Security (Lab 5)
+
+Roles: **STUDENT** (junior) and **TEACHER** (senior). Locked action: **approve** an assignment
+(`POST /api/v1/assignments/{id}/approve`, CHECKED → APPROVED).
+
+| Action | STUDENT (junior) | TEACHER (senior) | No token |
+|--------|------------------|------------------|----------|
+| POST /api/v1/auth/login | anyone | anyone | allowed |
+| Create and read assignments (`/api/v1/assignments`, `/{id}`) | yes | yes | 401 |
+| **Locked: POST /api/v1/assignments/{id}/approve** | **403** | yes | 401 |
+| GET /api/me | yes | yes | 401 |
+| GET /actuator/health | anyone | anyone | allowed |
+| GET /actuator/info | yes | yes | 401 |
+| Auth page `/`, `/index.html`, `/app.css`, `/app.js` | anyone | anyone | allowed |
+| springdoc UI and /v3/api-docs/** | anyone | anyone | allowed |
+| Anything else (env, heapdump, ...) | 403 | 403 | 401 |
+
+How it works
+- `POST /api/v1/auth/login` checks a BCrypt password and returns `accessToken`, `tokenType` (`Bearer`), `expiresIn` (`900`).
+- Token: HS256, issuer `homework-control`, lifetime 15 minutes, `roles` claim without the `ROLE_` prefix.
+- Bad username and bad password give the same 401: `UNAUTHENTICATED` / `bad username or password`.
+- Missing or bad token: 401 `valid token required`. Wrong role: 403 `FORBIDDEN` / `not allowed for your role`.
+  Error body is always `code`, `message`, `correlationId`.
+- Chain order is the table order; the locked verb is before `/api/v1/**`; the last rule is `denyAll`.
+  CSRF is off, sessions are stateless, no form login, no HTTP Basic.
+- The actor of `approve` is `Authentication.getName()`; the service method also has `@PreAuthorize("hasRole('TEACHER')")`.
+
+Secrets
+- `app.jwt.secret` (at least 32 characters) is in `application-dev.yaml`; prod reads `CSS_JWT_SECRET`, no default.
+- Dev users (`teacher`, `student`) exist only on the `dev` profile, passwords are BCrypt-encoded in memory. No user table.
+
+Auth page: run `mvn spring-boot:run` and open http://localhost:8080/
+Dev-only accounts: `teacher / teacher123`, `student / student123`.
+On the dev profile the row `HW-DEMO-APPROVE` (status CHECKED) is created at startup so the approve step can succeed.
