@@ -80,7 +80,8 @@ Arrows point inward, and `domain` never imports `org.springframework`.
 
 # Database (JPA + Flyway)
 
-PostgreSQL only. Classroom URL: `jdbc:postgresql://localhost:5233/css`, user `css`, password `css`.
+PostgreSQL only. The development URL is
+`jdbc:postgresql://localhost:5432/css`, user `css`, password `css`.
 The schema is owned by Flyway: migrations live in
 `project/src/main/resources/db/migration` (`V1__create_assignment.sql`) and
 run on application start.
@@ -113,6 +114,78 @@ A duplicate `business_key` becomes `DuplicateAssignment` (unchecked, in `domain`
 API: `POST /api/v1/assignments`, `GET /api/v1/assignments/{id}`.
 
 Swagger UI: `/swagger-ui.html`. Spec: `/v3/api-docs`. Health: `/actuator/health`.
+
+## PostgreSQL setup on Windows
+
+These steps are for a teammate setting up the project for the first time.
+The password requested by `psql` is the password of the PostgreSQL role, not
+the Windows password and not the application login password.
+
+1. Install PostgreSQL and remember the password of the administrator role
+   (usually `postgres`). During installation, leave the port as `5432`.
+2. Open **Services** in Windows and start the PostgreSQL service. Its name
+   usually looks like `postgresql-x64-...`. It must be running before starting
+   the application.
+3. Open **SQL Shell (psql)** from the PostgreSQL start menu, or open
+   PowerShell if `psql` is in `PATH`. Connect as the administrator:
+
+   ```powershell
+   psql -U postgres -h localhost -p 5432 -W
+   ```
+
+   Enter the administrator password chosen during PostgreSQL installation.
+   Nothing is displayed while typing a password; this is normal.
+4. In the psql window, create the application role and database. These
+   commands are safe to run again:
+
+   ```sql
+   DO $$
+   BEGIN
+       IF NOT EXISTS (SELECT FROM pg_roles WHERE rolname = 'css') THEN
+           CREATE ROLE css LOGIN PASSWORD 'css';
+       ELSE
+           ALTER ROLE css WITH LOGIN PASSWORD 'css';
+       END IF;
+   END
+   $$;
+
+   SELECT 'CREATE DATABASE css OWNER css'
+   WHERE NOT EXISTS (SELECT FROM pg_database WHERE datname = 'css')\gexec
+   ```
+
+   Exit psql with `\q`.
+5. Verify the exact credentials used by the application:
+
+   ```powershell
+   psql -U css -d css -h localhost -p 5432 -W
+   ```
+
+   When prompted, enter `css`. If this succeeds, the database connection is
+   ready. Do not run `cd` commands inside the psql window.
+6. In a new PowerShell window, from the repository root, start the application:
+
+   ```powershell
+   cd ".\project"
+   mvn spring-boot:run "-Dspring-boot.run.arguments=--app.cli.enabled=true"
+   ```
+
+   Flyway creates the tables automatically. No manual `CREATE TABLE` command
+   is needed.
+
+### PostgreSQL connection errors
+
+- `psql is not recognized`: start **SQL Shell (psql)**, or add PostgreSQL's
+  `bin` directory (for example `C:\Program Files\PostgreSQL\16\bin`) to
+  `PATH`.
+- `connection refused`: the PostgreSQL service is stopped, or PostgreSQL is
+  listening on a different port. Check the service and use port `5432`.
+- `password authentication failed for user "css"`: the role exists with a
+  different password. Connect as `postgres` and run
+  `ALTER ROLE css WITH PASSWORD 'css';`, then retry the verification command.
+- `database "css" does not exist`: connect as `postgres` and run
+  `CREATE DATABASE css OWNER css;`.
+- `password authentication failed for user "postgres"`: use the administrator
+  password created during PostgreSQL installation, or reset it in pgAdmin.
 
 ## Terminal menu
 
@@ -148,3 +221,38 @@ Start the menu with `mvn spring-boot:run "-Dspring-boot.run.arguments=--app.cli.
 Registration in the menu creates a `STUDENT` only. Dev demo users are
 `teacher / teacher123` and `student / student123`; production has no demo
 users. Passwords are stored as PBKDF2-HMAC-SHA256 hashes with random salts.
+
+# Security (Lab 5)
+
+Roles: **STUDENT** (junior) and **TEACHER** (senior). Locked action: **approve** an assignment
+(`POST /api/v1/assignments/{id}/approve`, CHECKED → APPROVED).
+
+| Action | STUDENT (junior) | TEACHER (senior) | No token |
+|--------|------------------|------------------|----------|
+| POST /api/v1/auth/login | anyone | anyone | allowed |
+| Create and read assignments (`/api/v1/assignments`, `/{id}`) | yes | yes | 401 |
+| **Locked: POST /api/v1/assignments/{id}/approve** | **403** | yes | 401 |
+| GET /api/me | yes | yes | 401 |
+| GET /actuator/health | anyone | anyone | allowed |
+| GET /actuator/info | yes | yes | 401 |
+| Auth page `/`, `/index.html`, `/app.css`, `/app.js` | anyone | anyone | allowed |
+| springdoc UI and /v3/api-docs/** | anyone | anyone | allowed |
+| Anything else (env, heapdump, ...) | 403 | 403 | 401 |
+
+How it works
+- `POST /api/v1/auth/login` checks a BCrypt password and returns `accessToken`, `tokenType` (`Bearer`), `expiresIn` (`900`).
+- Token: HS256, issuer `homework-control`, lifetime 15 minutes, `roles` claim without the `ROLE_` prefix.
+- Bad username and bad password give the same 401: `UNAUTHENTICATED` / `bad username or password`.
+- Missing or bad token: 401 `valid token required`. Wrong role: 403 `FORBIDDEN` / `not allowed for your role`.
+  Error body is always `code`, `message`, `correlationId`.
+- Chain order is the table order; the locked verb is before `/api/v1/**`; the last rule is `denyAll`.
+  CSRF is off, sessions are stateless, no form login, no HTTP Basic.
+- The actor of `approve` is `Authentication.getName()`; the service method also has `@PreAuthorize("hasRole('TEACHER')")`.
+
+Secrets
+- `app.jwt.secret` (at least 32 characters) is in `application-dev.yaml`; prod reads `CSS_JWT_SECRET`, no default.
+- Dev users (`teacher`, `student`) exist only on the `dev` profile, passwords are BCrypt-encoded in memory. No user table.
+
+Auth page: run `mvn spring-boot:run` and open http://localhost:8080/
+Dev-only accounts: `teacher / teacher123`, `student / student123`.
+On the dev profile the row `HW-DEMO-APPROVE` (status CHECKED) is created at startup so the approve step can succeed.

@@ -33,3 +33,6 @@ info:
 app:
   cli:
     enabled: false
+  jwt:
+    issuer: homework-control
+    ttl: 15m
