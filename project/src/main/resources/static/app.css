@@ -1,15 +1,16 @@
 :root {
-    --ink: #17181c;
-    --muted: #73757d;
-    --bg: #f2f2f7;
-    --card: rgba(255, 255, 255, .64);
-    --line: rgba(255, 255, 255, .8);
-    --brand: #17181c;
-    --brand-hover: #3b3d43;
-    --lock: #007aff;
-    --lock-hover: #0066d6;
-    --ok: #1d7b50;
-    --bad: #b33a50;
+    --ink: #453B49;
+    --muted: #857586;
+    --heading: #594052;
+    --bg: #FFF8F2;
+    --card: rgba(255, 248, 242, .82);
+    --line: #F5B6CC;
+    --brand: #F19AB5;
+    --brand-hover: #EFAB9E;
+    --lock: #A9D9C5;
+    --lock-hover: #A9D9C5;
+    --ok: #453B49;
+    --bad: #713F56;
 }
 
 * {
@@ -19,8 +20,8 @@
 body {
     margin: 0;
     min-height: 100vh;
-    font-family: -apple-system, BlinkMacSystemFont, "SF Pro Text",
-        "SF Pro Display", "Helvetica Neue", Arial, sans-serif;
+    font-family: "Lato", -apple-system, BlinkMacSystemFont, "Helvetica Neue",
+        Arial, sans-serif;
     font-size: 15px;
     line-height: 1.5;
     color: var(--ink);
@@ -33,6 +34,8 @@ header {
 
 header h1 {
     margin: 0;
+    color: var(--heading);
+    font-family: "Playfair Display", Georgia, serif;
     font-size: 1.55rem;
     letter-spacing: -.04em;
 }
@@ -50,13 +53,15 @@ section {
     border-radius: 24px;
     padding: 1.25rem;
     border: 1px solid var(--line);
-    box-shadow: 0 18px 45px rgba(41, 54, 91, .08);
+    box-shadow: 0 18px 45px rgba(241, 154, 181, .2);
     backdrop-filter: blur(26px);
     -webkit-backdrop-filter: blur(26px);
 }
 
 h2 {
     margin: .1rem 0 0;
+    color: var(--heading);
+    font-family: "Playfair Display", Georgia, serif;
     font-size: 1.2rem;
     letter-spacing: -.025em;
 }
@@ -86,9 +91,9 @@ h2 {
 
 .session-details span {
     padding: .45rem .7rem;
-    border: 1px solid rgba(255, 255, 255, .8);
+    border: 1px solid var(--line);
     border-radius: 999px;
-    background: rgba(255, 255, 255, .42);
+    background: #F5B6CC;
     color: var(--muted);
 }
 
@@ -103,16 +108,16 @@ label {
 input {
     min-width: 0;
     padding: .7rem .8rem;
-    border: 1px solid rgba(160, 168, 187, .35);
+    border: 1px solid #C8B5E8;
     border-radius: 12px;
-    background: rgba(255, 255, 255, .56);
+    background: #FFF8F2;
     color: var(--ink);
     font: inherit;
 }
 
 input:focus {
-    outline: 3px solid rgba(103, 137, 255, .2);
-    border-color: rgba(103, 137, 255, .65);
+    outline: 3px solid rgba(200, 181, 232, .7);
+    border-color: #F19AB5;
 }
 
 form {
@@ -128,7 +133,7 @@ form button {
 
 button {
     background: var(--brand);
-    color: #fff;
+    color: #FFFFFF;
     border: 0;
     border-radius: 999px;
     padding: .68rem 1rem;
@@ -145,8 +150,8 @@ button:hover {
 
 button.lock {
     background: var(--lock);
-    color: #fff;
-    box-shadow: 0 5px 14px rgba(0, 122, 255, .24);
+    color: var(--ink);
+    box-shadow: 0 5px 14px rgba(169, 217, 197, .7);
 }
 
 button.lock:hover {
@@ -155,13 +160,13 @@ button.lock:hover {
 
 .button-quiet {
     padding: .5rem .8rem;
-    background: rgba(255, 255, 255, .55);
+    background: #F5DE91;
     color: var(--ink);
-    border: 1px solid rgba(255, 255, 255, .8);
+    border: 1px solid var(--line);
 }
 
 .button-quiet:hover {
-    background: rgba(255, 255, 255, .9);
+    background: #F5B6CC;
 }
 
 .table-wrapper {
@@ -185,13 +190,13 @@ th,
 td {
     text-align: left;
     padding: .7rem .5rem;
-    border-bottom: 1px solid rgba(140, 148, 167, .18);
+    border-bottom: 1px solid #F5B6CC;
 }
 
 pre {
     margin: 0;
     padding: .75rem .85rem;
-    background: rgba(255, 255, 255, .42);
+    background: #C8B5E8;
     border-radius: 14px;
     white-space: pre-wrap;
     word-break: break-word;
@@ -200,12 +205,12 @@ pre {
 
 pre.ok {
     color: var(--ok);
-    background: #eefaf4;
+    background: #A9D9C5;
 }
 
 pre.err {
     color: var(--bad);
-    background: #fff0f3;
+    background: #EFAB9E;
 }
 
 [hidden] {
