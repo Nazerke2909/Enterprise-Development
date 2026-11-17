@@ -1,5 +1,6 @@
 package com.example.homework.config;
 
+import com.example.homework.domain.Role;
 import org.springframework.security.core.Authentication;
 import org.springframework.security.core.GrantedAuthority;
 import org.springframework.security.oauth2.jose.jws.MacAlgorithm;
@@ -32,6 +33,8 @@ public class TokenService {
     public String issue(String username, Collection<? extends GrantedAuthority> authorities) {
         List<String> roles = authorities.stream()
                 .map(GrantedAuthority::getAuthority)
+                .filter(a -> a.equals(ROLE_PREFIX + Role.STUDENT.name())
+                        || a.equals(ROLE_PREFIX + Role.TEACHER.name()))
                 .map(a -> a.startsWith(ROLE_PREFIX) ? a.substring(ROLE_PREFIX.length()) : a)
                 .sorted()
                 .toList();

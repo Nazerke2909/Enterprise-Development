@@ -1,6 +1,7 @@
 package com.example.homework.handler;
 
 import com.example.homework.config.AssignmentService;
+import com.example.homework.config.Application;
 import com.example.homework.domain.AssignmentStatus;
 import com.example.homework.persistence.AssignmentEntity;
 import com.example.homework.persistence.AssignmentRepository;
@@ -24,7 +25,7 @@ import static org.springframework.test.web.servlet.request.MockMvcRequestBuilder
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.jsonPath;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
 
-@SpringBootTest
+@SpringBootTest(classes = Application.class)
 @AutoConfigureMockMvc
 class AuthApiTest {
     private static final String LOGIN = "/api/v1/auth/login";

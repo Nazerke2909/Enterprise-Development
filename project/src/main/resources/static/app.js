@@ -2,6 +2,7 @@
     "use strict";
 
     var accessToken = null;
+    var canApprove = false;
 
     function $(id) {
         return document.getElementById(id);
@@ -77,15 +78,18 @@
 
     function setSession(me, expiresIn) {
         var signedIn = !!me;
+        canApprove = signedIn && (me.authorities || []).indexOf("ROLE_TEACHER") !== -1;
         $("login-form").closest("section").hidden = signedIn;
         $("session-heading").parentElement.hidden = !signedIn;
         $("assignments-heading").parentElement.hidden = !signedIn;
+        $("locked-action-heading").hidden = !canApprove;
         if (signedIn) {
             $("session-username").textContent = me.username;
             $("session-role").textContent = roleLabel(me.authorities);
             $("token-lifetime").textContent = expiresIn + " seconds ("
                 + Math.round(expiresIn / 60) + " minutes)";
         } else {
+            canApprove = false;
             $("session-username").textContent = "****";
             $("session-role").textContent = "****";
             $("token-lifetime").textContent = "";
@@ -102,16 +106,18 @@
                 td.textContent = text;
                 tr.appendChild(td);
             });
-            var action = document.createElement("td");
-            var button = document.createElement("button");
-            button.type = "button";
-            button.className = "lock";
-            button.textContent = "Approve (TEACHER only)";
-            button.addEventListener("click", function () {
-                approve(row);
-            });
-            action.appendChild(button);
-            tr.appendChild(action);
+            if (canApprove) {
+                var action = document.createElement("td");
+                var button = document.createElement("button");
+                button.type = "button";
+                button.className = "lock";
+                button.textContent = "Approve";
+                button.addEventListener("click", function () {
+                    approve(row);
+                });
+                action.appendChild(button);
+                tr.appendChild(action);
+            }
             body.appendChild(tr);
         });
     }
