@@ -4,9 +4,6 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1">
     <title>Homework Control</title>
-    <link rel="preconnect" href="https://fonts.googleapis.com">
-    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-    <link href="https://fonts.googleapis.com/css2?family=Lato:wght@400;600;700&family=Playfair+Display:wght@600;700&display=swap" rel="stylesheet">
     <link rel="stylesheet" href="/app.css">
     <script src="/app.js" defer></script>
 </head>
@@ -31,7 +28,7 @@
         </form>
     </section>
 
-    <section aria-labelledby="session-heading">
+    <section aria-labelledby="session-heading" hidden>
         <div class="section-heading">
             <div>
                 <span class="eyebrow">Session</span>
@@ -40,16 +37,16 @@
             <button id="logout-button" class="button-quiet" type="button">Log out</button>
         </div>
         <div class="session-details">
-            <span id="session-username">****</span>
-            <span id="session-role">****</span>
+            <span id="session-username"></span>
+            <span id="session-role"></span>
             <span id="token-lifetime"></span>
         </div>
     </section>
 
-    <section aria-labelledby="assignments-heading">
+    <section aria-labelledby="assignments-heading" hidden>
         <div class="section-heading">
             <div>
-                <span class="eyebrow">Workspace</span>
+                <div class="eyebrow">Workspace</div>
                 <h2 id="assignments-heading">Assignments</h2>
             </div>
             <button id="read-all-button" class="button-quiet" type="button">Refresh</button>
@@ -81,10 +78,6 @@
         </div>
     </section>
 
-    <section aria-labelledby="last-response-heading">
-        <span class="eyebrow" id="last-response-heading">Activity</span>
-        <pre id="last-response">Nothing called yet.</pre>
-    </section>
 </main>
 </body>
 </html>

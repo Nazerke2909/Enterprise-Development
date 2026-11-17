@@ -53,12 +53,18 @@
             line += "\n" + extra;
         }
         var box = $("last-response");
+        if (!box) {
+            return;
+        }
         box.textContent = line;
         box.className = failed ? "err" : "ok";
     }
 
     function networkError(error) {
         var box = $("last-response");
+        if (!box) {
+            return;
+        }
         box.textContent = "Network error: " + error.message;
         box.className = "err";
     }
@@ -80,8 +86,8 @@
         var signedIn = !!me;
         canApprove = signedIn && (me.authorities || []).indexOf("ROLE_TEACHER") !== -1;
         $("login-form").closest("section").hidden = signedIn;
-        $("session-heading").parentElement.hidden = !signedIn;
-        $("assignments-heading").parentElement.hidden = !signedIn;
+        $("session-heading").closest("section").hidden = !signedIn;
+        $("assignments-heading").closest("section").hidden = !signedIn;
         $("locked-action-heading").hidden = !canApprove;
         if (signedIn) {
             $("session-username").textContent = me.username;
@@ -89,9 +95,8 @@
             $("token-lifetime").textContent = expiresIn + " seconds ("
                 + Math.round(expiresIn / 60) + " minutes)";
         } else {
-            canApprove = false;
-            $("session-username").textContent = "****";
-            $("session-role").textContent = "****";
+            $("session-username").textContent = "";
+            $("session-role").textContent = "";
             $("token-lifetime").textContent = "";
         }
     }
@@ -172,6 +177,7 @@
                 if (me.status === 200) {
                     setSession(me.data, expiresIn);
                     renderRows([]);
+                    readAll();
                     show("Login", { status: 200, data: null },
                         "Signed in. The token is kept in memory only.");
                 } else {
@@ -181,6 +187,12 @@
                 }
             });
         }).catch(networkError);
+    });
+
+    $("logout-button").addEventListener("click", function () {
+        accessToken = null;
+        setSession(null);
+        renderRows([]);
     });
 
     $("create-assignment-form").addEventListener("submit", function (event) {
@@ -198,14 +210,6 @@
     });
 
     $("read-all-button").addEventListener("click", readAll);
-    $("logout-button").addEventListener("click", function () {
-        accessToken = null;
-        setSession(null);
-        renderRows([]);
-        var box = $("last-response");
-        box.textContent = "Logged out. The next API call will have no token.";
-        box.className = "";
-    });
 
     setSession(null);
 })();
