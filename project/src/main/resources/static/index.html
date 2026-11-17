@@ -1,0 +1,77 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <title>Homework Control</title>
+    <link rel="stylesheet" href="/app.css">
+    <script src="/app.js" defer></script>
+</head>
+<body>
+<main class="container">
+    <header>
+        <h1>Homework Control</h1>
+        <p>Track a homework assignment from ASSIGNED to APPROVED.</p>
+        <ul>
+            <li><strong>STUDENT</strong> (junior): create and read assignments. Cannot approve.</li>
+            <li><strong>TEACHER</strong> (senior): everything above, and <em>approve</em> a CHECKED assignment.</li>
+        </ul>
+        <p>Dev-only accounts: <code>teacher / teacher123</code> and <code>student / student123</code></p>
+    </header>
+
+    <section aria-labelledby="sign-in-heading">
+        <h2 id="sign-in-heading">Sign in</h2>
+        <form id="login-form">
+            <label for="username">Username</label>
+            <input id="username" name="username" type="text" autocomplete="username" required>
+
+            <label for="password">Password</label>
+            <input id="password" name="password" type="password" autocomplete="current-password" required>
+
+            <button type="submit">Log in</button>
+        </form>
+    </section>
+
+    <section aria-labelledby="session-heading">
+        <h2 id="session-heading">Session</h2>
+        <p>Signed in as <strong id="session-username">****</strong>, role <strong id="session-role">****</strong></p>
+        <p>Token lifetime: <span id="token-lifetime"></span></p>
+        <button id="logout-button" type="button">Log out</button>
+    </section>
+
+    <section aria-labelledby="assignments-heading">
+        <h2 id="assignments-heading">Assignments</h2>
+        <form id="create-assignment-form">
+            <label for="business-key">Business key</label>
+            <input id="business-key" name="businessKey" type="text" required>
+
+            <label for="assignment-title">Title</label>
+            <input id="assignment-title" name="title" type="text" maxlength="120" required>
+
+            <button type="submit">Create assignment</button>
+        </form>
+
+        <button id="read-all-button" type="button">Read all assignments</button>
+
+        <div class="table-wrapper">
+            <table>
+                <thead>
+                <tr>
+                    <th scope="col">Key</th>
+                    <th scope="col">Title</th>
+                    <th scope="col">Status</th>
+                    <th scope="col">Locked action</th>
+                </tr>
+                </thead>
+                <tbody id="assignments-body"></tbody>
+            </table>
+        </div>
+    </section>
+
+    <section aria-labelledby="last-response-heading">
+        <h2 id="last-response-heading">Last response</h2>
+        <pre id="last-response">Nothing called yet.</pre>
+    </section>
+</main>
+</body>
+</html>

@@ -1,19 +1,25 @@
 package com.example.homework.handler;
 
+import com.example.homework.TestTokens;
 import com.example.homework.config.AssignmentService;
+import com.example.homework.config.SecurityConfig;
 import com.example.homework.domain.AssignmentId;
 import com.example.homework.domain.AssignmentNotFound;
 import com.example.homework.domain.AssignmentStatus;
 import com.example.homework.domain.DuplicateAssignment;
+import com.example.homework.domain.ForbiddenTransition;
 import com.example.homework.persistence.AssignmentRecord;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.webmvc.test.autoconfigure.WebMvcTest;
 import org.springframework.http.MediaType;
-import org.springframework.test.context.bean.override.mockito.MockitoBean;
+import org.springframework.security.oauth2.jwt.JwtDecoder;
 import org.springframework.test.context.ContextConfiguration;
+import org.springframework.test.context.TestPropertySource;
+import org.springframework.test.context.bean.override.mockito.MockitoBean;
 import org.springframework.test.web.servlet.MockMvc;
 
+import java.util.List;
 import java.util.UUID;
 
 import static org.hamcrest.Matchers.containsString;
@@ -29,7 +35,10 @@ import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
 
 @WebMvcTest(AssignmentController.class)
-@ContextConfiguration(classes = {AssignmentController.class, ApiExceptionHandler.class})
+@ContextConfiguration(classes = {AssignmentController.class, ApiExceptionHandler.class, SecurityConfig.class})
+@TestPropertySource(properties = {
+        "app.jwt.secret=" + TestTokens.SECRET,
+        "app.jwt.issuer=homework-control"})
 class AssignmentControllerTest {
     private static final String URL = "/api/v1/assignments";
 
@@ -38,6 +47,9 @@ class AssignmentControllerTest {
 
     @MockitoBean
     AssignmentService service;
+
+    @MockitoBean
+    JwtDecoder jwtDecoder;
 
     private static String body(String key, String title) {
         return "{\"businessKey\":\"" + key + "\",\"title\":\"" + title + "\"}";
@@ -49,7 +61,8 @@ class AssignmentControllerTest {
         when(service.register(any(AssignmentId.class), eq("HW-1"), eq("Essay")))
                 .thenReturn(new AssignmentRecord(id, "HW-1", AssignmentStatus.ASSIGNED, "Essay"));
 
-        mvc.perform(post(URL).contentType(MediaType.APPLICATION_JSON).content(body("HW-1", "Essay")))
+        mvc.perform(post(URL).with(TestTokens.student())
+                        .contentType(MediaType.APPLICATION_JSON).content(body("HW-1", "Essay")))
                 .andExpect(status().isCreated())
                 .andExpect(header().string("Location", endsWith(URL + "/" + id)))
                 .andExpect(jsonPath("$.id").value(id.toString()))
@@ -64,14 +77,16 @@ class AssignmentControllerTest {
         when(service.register(any(AssignmentId.class), eq("HW-2"), eq(title)))
                 .thenReturn(new AssignmentRecord(UUID.randomUUID(), "HW-2", AssignmentStatus.ASSIGNED, title));
 
-        mvc.perform(post(URL).contentType(MediaType.APPLICATION_JSON).content(body("HW-2", title)))
+        mvc.perform(post(URL).with(TestTokens.teacher())
+                        .contentType(MediaType.APPLICATION_JSON).content(body("HW-2", title)))
                 .andExpect(status().isCreated())
                 .andExpect(jsonPath("$.title").value(title));
     }
 
     @Test
     void blankTitleReturns400AndServiceIsNotCalled() throws Exception {
-        mvc.perform(post(URL).contentType(MediaType.APPLICATION_JSON).content(body("HW-1", "")))
+        mvc.perform(post(URL).with(TestTokens.teacher())
+                        .contentType(MediaType.APPLICATION_JSON).content(body("HW-1", "")))
                 .andExpect(status().isBadRequest())
                 .andExpect(jsonPath("$.code").value("VALIDATION"))
                 .andExpect(jsonPath("$.message").value("title must not be blank"));
@@ -80,7 +95,8 @@ class AssignmentControllerTest {
 
     @Test
     void spacesOnlyTitleReturns400() throws Exception {
-        mvc.perform(post(URL).contentType(MediaType.APPLICATION_JSON).content(body("HW-1", "   ")))
+        mvc.perform(post(URL).with(TestTokens.teacher())
+                        .contentType(MediaType.APPLICATION_JSON).content(body("HW-1", "   ")))
                 .andExpect(status().isBadRequest())
                 .andExpect(jsonPath("$.message").value("title must not be blank"));
         verifyNoInteractions(service);
@@ -88,7 +104,8 @@ class AssignmentControllerTest {
 
     @Test
     void blankBusinessKeyReturns400() throws Exception {
-        mvc.perform(post(URL).contentType(MediaType.APPLICATION_JSON).content(body("", "Essay")))
+        mvc.perform(post(URL).with(TestTokens.teacher())
+                        .contentType(MediaType.APPLICATION_JSON).content(body("", "Essay")))
                 .andExpect(status().isBadRequest())
                 .andExpect(jsonPath("$.message").value("business key must not be blank"));
         verifyNoInteractions(service);
@@ -96,7 +113,8 @@ class AssignmentControllerTest {
 
     @Test
     void title121CharsReturns400() throws Exception {
-        mvc.perform(post(URL).contentType(MediaType.APPLICATION_JSON).content(body("HW-1", "x".repeat(121))))
+        mvc.perform(post(URL).with(TestTokens.teacher())
+                        .contentType(MediaType.APPLICATION_JSON).content(body("HW-1", "x".repeat(121))))
                 .andExpect(status().isBadRequest())
                 .andExpect(jsonPath("$.code").value("VALIDATION"))
                 .andExpect(jsonPath("$.message").value(containsString("size must be between 0 and 120")));
@@ -105,7 +123,8 @@ class AssignmentControllerTest {
 
     @Test
     void notJsonBodyReturns400() throws Exception {
-        mvc.perform(post(URL).contentType(MediaType.APPLICATION_JSON).content("not json"))
+        mvc.perform(post(URL).with(TestTokens.teacher())
+                        .contentType(MediaType.APPLICATION_JSON).content("not json"))
                 .andExpect(status().isBadRequest())
                 .andExpect(jsonPath("$.code").value("VALIDATION"))
                 .andExpect(jsonPath("$.message").value("body must be JSON"));
@@ -113,7 +132,8 @@ class AssignmentControllerTest {
 
     @Test
     void wrongContentTypeReturns415() throws Exception {
-        mvc.perform(post(URL).contentType(MediaType.TEXT_PLAIN).content("x"))
+        mvc.perform(post(URL).with(TestTokens.teacher())
+                        .contentType(MediaType.TEXT_PLAIN).content("x"))
                 .andExpect(status().isUnsupportedMediaType())
                 .andExpect(jsonPath("$.code").value("UNSUPPORTED"));
     }
@@ -123,7 +143,7 @@ class AssignmentControllerTest {
         UUID id = UUID.randomUUID();
         when(service.findById(id)).thenThrow(new AssignmentNotFound(id.toString()));
 
-        mvc.perform(get(URL + "/" + id))
+        mvc.perform(get(URL + "/" + id).with(TestTokens.student()))
                 .andExpect(status().isNotFound())
                 .andExpect(jsonPath("$.code").value("NOT_FOUND"));
     }
@@ -133,14 +153,15 @@ class AssignmentControllerTest {
         when(service.register(any(AssignmentId.class), eq("HW-1"), eq("Essay")))
                 .thenThrow(new DuplicateAssignment("HW-1"));
 
-        mvc.perform(post(URL).contentType(MediaType.APPLICATION_JSON).content(body("HW-1", "Essay")))
+        mvc.perform(post(URL).with(TestTokens.teacher())
+                        .contentType(MediaType.APPLICATION_JSON).content(body("HW-1", "Essay")))
                 .andExpect(status().isConflict())
                 .andExpect(jsonPath("$.code").value("DUPLICATE"));
     }
 
     @Test
     void businessKeyInPathReturns400() throws Exception {
-        mvc.perform(get(URL + "/HW-1"))
+        mvc.perform(get(URL + "/HW-1").with(TestTokens.student()))
                 .andExpect(status().isBadRequest())
                 .andExpect(jsonPath("$.code").value("VALIDATION"))
                 .andExpect(jsonPath("$.message").value("id must be a UUID"));
@@ -149,7 +170,7 @@ class AssignmentControllerTest {
 
     @Test
     void correlationHeaderIsEchoedOnError() throws Exception {
-        mvc.perform(post(URL).header("X-Correlation-Id", "abc-123")
+        mvc.perform(post(URL).with(TestTokens.teacher()).header("X-Correlation-Id", "abc-123")
                         .contentType(MediaType.APPLICATION_JSON).content(body("HW-1", "")))
                 .andExpect(status().isBadRequest())
                 .andExpect(jsonPath("$.correlationId").value("abc-123"));
@@ -157,7 +178,28 @@ class AssignmentControllerTest {
 
     @Test
     void missingCorrelationHeaderIsMinted() throws Exception {
-        mvc.perform(get(URL + "/HW-1"))
+        mvc.perform(get(URL + "/HW-1").with(TestTokens.student()))
                 .andExpect(jsonPath("$.correlationId").isNotEmpty());
+    }
+
+    @Test
+    void listReturnsRows() throws Exception {
+        when(service.findAll()).thenReturn(List.of(
+                new AssignmentRecord(UUID.randomUUID(), "HW-1", AssignmentStatus.CHECKED, "Essay")));
+
+        mvc.perform(get(URL).with(TestTokens.student()))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$[0].status").value("CHECKED"));
+    }
+
+    @Test
+    void approveForbiddenByStatusTableReturns409() throws Exception {
+        UUID id = UUID.randomUUID();
+        when(service.approve(id, "tom"))
+                .thenThrow(new ForbiddenTransition("Forbidden transition: ASSIGNED -> APPROVED"));
+
+        mvc.perform(post(URL + "/" + id + "/approve").with(TestTokens.teacher()))
+                .andExpect(status().isConflict())
+                .andExpect(jsonPath("$.code").value("FORBIDDEN_TRANSITION"));
     }
 }

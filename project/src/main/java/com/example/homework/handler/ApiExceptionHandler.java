@@ -2,12 +2,15 @@ package com.example.homework.handler;
 
 import com.example.homework.domain.AssignmentNotFound;
 import com.example.homework.domain.DuplicateAssignment;
+import com.example.homework.domain.ForbiddenTransition;
 import jakarta.servlet.http.HttpServletRequest;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.http.converter.HttpMessageNotReadableException;
+import org.springframework.security.access.AccessDeniedException;
+import org.springframework.security.core.AuthenticationException;
 import org.springframework.validation.FieldError;
 import org.springframework.web.HttpMediaTypeNotSupportedException;
 import org.springframework.web.HttpRequestMethodNotSupportedException;
@@ -73,6 +76,23 @@ public class ApiExceptionHandler {
     public ResponseEntity<ApiError> onWrongMethod(HttpServletRequest request) {
         return build(HttpStatus.METHOD_NOT_ALLOWED, "METHOD_NOT_ALLOWED",
                 "method is not allowed", correlationId(request));
+    }
+
+    @ExceptionHandler(AuthenticationException.class)
+    public ResponseEntity<ApiError> onBadLogin(HttpServletRequest request) {
+        return build(HttpStatus.UNAUTHORIZED, "UNAUTHENTICATED", "bad username or password",
+                correlationId(request));
+    }
+
+    @ExceptionHandler(AccessDeniedException.class)
+    public ResponseEntity<ApiError> onAccessDenied(HttpServletRequest request) {
+        return build(HttpStatus.FORBIDDEN, "FORBIDDEN", "not allowed for your role",
+                correlationId(request));
+    }
+
+    @ExceptionHandler(ForbiddenTransition.class)
+    public ResponseEntity<ApiError> onForbiddenTransition(ForbiddenTransition ex, HttpServletRequest request) {
+        return build(HttpStatus.CONFLICT, "FORBIDDEN_TRANSITION", ex.getMessage(), correlationId(request));
     }
 
     @ExceptionHandler(Exception.class)

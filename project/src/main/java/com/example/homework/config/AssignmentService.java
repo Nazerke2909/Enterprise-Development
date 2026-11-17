@@ -13,18 +13,20 @@ import com.example.homework.persistence.AssignmentRepository;
 import org.springframework.dao.DataIntegrityViolationException;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
-
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+import org.springframework.security.access.prepost.PreAuthorize;
 import java.util.List;
 import java.util.UUID;
 
 @Service
 public class AssignmentService {
     private static final String TITLE_MISSING = "Assignment title cannot be null or blank";
-
+    private static final Logger log = LoggerFactory.getLogger(AssignmentService.class);
     private final Rule rules;
     private final AssignmentRepository assignments;
     private final AssignmentNotifier notifier;
-
+    
     public AssignmentService(Rule rules, AssignmentRepository assignments, AssignmentNotifier notifier) {
         this.rules = rules;
         this.assignments = assignments;
@@ -47,6 +49,18 @@ public class AssignmentService {
         assignment.changeStatus(to);
         notifier.statusChanged(new AssignmentId(assignment.getId().toString()), to);
         return to;
+    }
+
+    @PreAuthorize("hasRole('TEACHER')")
+    @Transactional
+    public AssignmentRecord approve(UUID id, String actor) {
+        AssignmentEntity assignment = assignments.findById(id)
+                .orElseThrow(() -> new AssignmentNotFound(id.toString()));
+        rules.check(assignment.getStatus(), AssignmentStatus.APPROVED);
+        assignment.changeStatus(AssignmentStatus.APPROVED);
+        notifier.statusChanged(new AssignmentId(id.toString()), AssignmentStatus.APPROVED);
+        log.info("Assignment {} approved by {}", id, actor);
+        return AssignmentRecord.from(assignment);
     }
 
     @Transactional(readOnly = true)

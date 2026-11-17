@@ -11,6 +11,7 @@ import io.swagger.v3.oas.annotations.responses.ApiResponses;
 import jakarta.validation.Valid;
 import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
+import org.springframework.security.core.Authentication;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.PostMapping;
@@ -20,11 +21,13 @@ import org.springframework.web.bind.annotation.RestController;
 import org.springframework.web.servlet.support.ServletUriComponentsBuilder;
 
 import java.net.URI;
+import java.util.List;
 import java.util.UUID;
 
 @RestController
 @RequestMapping("/api/v1/assignments")
 public class AssignmentController {
+
     private final AssignmentService service;
 
     public AssignmentController(AssignmentService service) {
@@ -37,6 +40,8 @@ public class AssignmentController {
                     content = @Content(schema = @Schema(implementation = AssignmentResponse.class))),
             @ApiResponse(responseCode = "400", description = "VALIDATION",
                     content = @Content(schema = @Schema(implementation = ApiError.class))),
+            @ApiResponse(responseCode = "401", description = "UNAUTHENTICATED",
+                    content = @Content(schema = @Schema(implementation = ApiError.class))),
             @ApiResponse(responseCode = "409", description = "DUPLICATE business key",
                     content = @Content(schema = @Schema(implementation = ApiError.class)))
     })
@@ -48,11 +53,24 @@ public class AssignmentController {
         return ResponseEntity.created(location).body(AssignmentResponse.from(created));
     }
 
+    @Operation(summary = "List assignments")
+    @ApiResponses({
+            @ApiResponse(responseCode = "200", description = "All assignments"),
+            @ApiResponse(responseCode = "401", description = "UNAUTHENTICATED",
+                    content = @Content(schema = @Schema(implementation = ApiError.class)))
+    })
+    @GetMapping
+    public List<AssignmentResponse> list() {
+        return service.findAll().stream().map(AssignmentResponse::from).toList();
+    }
+
     @Operation(summary = "Read an assignment by UUID")
     @ApiResponses({
             @ApiResponse(responseCode = "200", description = "Found",
                     content = @Content(schema = @Schema(implementation = AssignmentResponse.class))),
             @ApiResponse(responseCode = "400", description = "id is not a UUID",
+                    content = @Content(schema = @Schema(implementation = ApiError.class))),
+            @ApiResponse(responseCode = "401", description = "UNAUTHENTICATED",
                     content = @Content(schema = @Schema(implementation = ApiError.class))),
             @ApiResponse(responseCode = "404", description = "NOT_FOUND",
                     content = @Content(schema = @Schema(implementation = ApiError.class)))
@@ -60,5 +78,23 @@ public class AssignmentController {
     @GetMapping("/{id}")
     public AssignmentResponse get(@PathVariable UUID id) {
         return AssignmentResponse.from(service.findById(id));
+    }
+
+    @Operation(summary = "Approve an assignment (TEACHER only)")
+    @ApiResponses({
+            @ApiResponse(responseCode = "200", description = "Approved, new status in the body",
+                    content = @Content(schema = @Schema(implementation = AssignmentResponse.class))),
+            @ApiResponse(responseCode = "401", description = "UNAUTHENTICATED",
+                    content = @Content(schema = @Schema(implementation = ApiError.class))),
+            @ApiResponse(responseCode = "403", description = "FORBIDDEN: not allowed for your role",
+                    content = @Content(schema = @Schema(implementation = ApiError.class))),
+            @ApiResponse(responseCode = "404", description = "NOT_FOUND",
+                    content = @Content(schema = @Schema(implementation = ApiError.class))),
+            @ApiResponse(responseCode = "409", description = "FORBIDDEN_TRANSITION by the status table",
+                    content = @Content(schema = @Schema(implementation = ApiError.class)))
+    })
+    @PostMapping("/{id}/approve")
+    public AssignmentResponse approve(@PathVariable UUID id, Authentication authentication) {
+        return AssignmentResponse.from(service.approve(id, authentication.getName()));
     }
 }

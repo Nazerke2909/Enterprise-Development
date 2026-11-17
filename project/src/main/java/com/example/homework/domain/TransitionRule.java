@@ -17,7 +17,7 @@ public class TransitionRule implements Rule {
             throw new IllegalStateException("Assignment status cannot be null");
         }
         if (!ALLOWED.getOrDefault(from, Set.of()).contains(to)) {
-            throw new IllegalStateException("Forbidden transition: " + from + " -> " + to);
+            throw new ForbiddenTransition("Forbidden transition: " + from + " -> " + to);
         }
     }
 }
