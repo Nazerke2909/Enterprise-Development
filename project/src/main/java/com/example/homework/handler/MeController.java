@@ -25,6 +25,7 @@ public class MeController {
         return new MeResponse(authentication.getName(),
                 authentication.getAuthorities().stream()
                         .map(GrantedAuthority::getAuthority)
+                        .filter(authority -> authority.startsWith("ROLE_"))
                         .sorted()
                         .toList());
     }

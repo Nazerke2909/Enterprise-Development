@@ -11,47 +11,57 @@
 <main class="container">
     <header>
         <h1>Homework Control</h1>
-        <p>Track a homework assignment from ASSIGNED to APPROVED.</p>
-        <ul>
-            <li><strong>STUDENT</strong> (junior): create and read assignments. Cannot approve.</li>
-            <li><strong>TEACHER</strong> (senior): everything above, and <em>approve</em> a CHECKED assignment.</li>
-        </ul>
-        <p>Dev-only accounts: <code>teacher / teacher123</code> and <code>student / student123</code></p>
     </header>
 
     <section aria-labelledby="sign-in-heading">
-        <h2 id="sign-in-heading">Sign in</h2>
+        <h2 id="sign-in-heading">Welcome back</h2>
         <form id="login-form">
-            <label for="username">Username</label>
-            <input id="username" name="username" type="text" autocomplete="username" required>
-
-            <label for="password">Password</label>
-            <input id="password" name="password" type="password" autocomplete="current-password" required>
-
-            <button type="submit">Log in</button>
+            <label>
+                <span>Username</span>
+                <input id="username" name="username" type="text" autocomplete="username" required>
+            </label>
+            <label>
+                <span>Password</span>
+                <input id="password" name="password" type="password" autocomplete="current-password" required>
+            </label>
+            <button type="submit">Continue</button>
         </form>
     </section>
 
-    <section aria-labelledby="session-heading">
-        <h2 id="session-heading">Session</h2>
-        <p>Signed in as <strong id="session-username">****</strong>, role <strong id="session-role">****</strong></p>
-        <p>Token lifetime: <span id="token-lifetime"></span></p>
-        <button id="logout-button" type="button">Log out</button>
+    <section aria-labelledby="session-heading" hidden>
+        <div class="section-heading">
+            <div>
+                <span class="eyebrow">Session</span>
+                <h2 id="session-heading">Account</h2>
+            </div>
+            <button id="logout-button" class="button-quiet" type="button">Log out</button>
+        </div>
+        <div class="session-details">
+            <span id="session-username"></span>
+            <span id="session-role"></span>
+            <span id="token-lifetime"></span>
+        </div>
     </section>
 
-    <section aria-labelledby="assignments-heading">
-        <h2 id="assignments-heading">Assignments</h2>
+    <section aria-labelledby="assignments-heading" hidden>
+        <div class="section-heading">
+            <div>
+                <div class="eyebrow">Workspace</div>
+                <h2 id="assignments-heading">Assignments</h2>
+            </div>
+            <button id="read-all-button" class="button-quiet" type="button">Refresh</button>
+        </div>
         <form id="create-assignment-form">
-            <label for="business-key">Business key</label>
-            <input id="business-key" name="businessKey" type="text" required>
-
-            <label for="assignment-title">Title</label>
-            <input id="assignment-title" name="title" type="text" maxlength="120" required>
-
-            <button type="submit">Create assignment</button>
+            <label>
+                <span>Business key</span>
+                <input id="business-key" name="businessKey" type="text" required>
+            </label>
+            <label>
+                <span>Title</span>
+                <input id="assignment-title" name="title" type="text" maxlength="120" required>
+            </label>
+            <button type="submit">Add assignment</button>
         </form>
-
-        <button id="read-all-button" type="button">Read all assignments</button>
 
         <div class="table-wrapper">
             <table>
@@ -60,7 +70,7 @@
                     <th scope="col">Key</th>
                     <th scope="col">Title</th>
                     <th scope="col">Status</th>
-                    <th scope="col">Locked action</th>
+                    <th id="locked-action-heading" scope="col">Locked action</th>
                 </tr>
                 </thead>
                 <tbody id="assignments-body"></tbody>
@@ -68,10 +78,6 @@
         </div>
     </section>
 
-    <section aria-labelledby="last-response-heading">
-        <h2 id="last-response-heading">Last response</h2>
-        <pre id="last-response">Nothing called yet.</pre>
-    </section>
 </main>
 </body>
 </html>
